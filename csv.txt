@@ -1,0 +1,101 @@
+csv.txt
+
+Standard Unix tools can be used once the data files are in CSV format.
+We will, in general, do some quick data slicing and dicing, then import
+the CSV into a spreadsheet (LibreOffice), plot and build presentation.
+
+In future, the data collection utility may be modified to produce CSV
+format (or json) directly.
+
+reader.c converts experiment to csv, miller, jq, jo are then used to
+further slice and dice (note LibreOffice likes csv). datamash can be
+used to do statistics and other calculations on the data.
+
+    miller, datamash, jq and jo are available from the Fedora
+    repository. A copy of ministat and FlameGraph is included
+    here as well. (ministat is a standard in FreeBSD, but not
+    in Linux).
+
+reader <out >csv
+
+converts the out file from the benchmark into a csv file, with the first
+line as the header. Then
+
+mlr --c2j cat csv >json
+
+would convert the csv into json. We can also use mlr to do some additional
+manipulation as needed. jq can also be used.
+
+
+We create link to the result of the experiment. This is done
+for convenience only.
+
+    ln -s `find 9004-* -name '*.out'` 9004.out
+
+To convert the data "out" files to CSV, use the reader utility (reader.c).
+
+    reader <out >csv
+
+The first two lines of the "out" file describe the command producing
+the result, and the number of threads used.
+
+    head -2 out
+
+The number of fields in a csv file is
+
+    echo $((1 + $(head -1 csv | tr -d -c , | wc -c)))
+
+(given that we do not have any quoting needed here).
+
+The reader program always puts a field at the front that can be
+used by grep to select lines of a certain type. The start of each
+line will be
+
+    ^type for the title
+    ^TOTAL for the total line
+    ^DATA for data lines
+
+    grep "^DATA" 9004.csv
+
+There are 27 fields in the CSV output.
+
+     1 - type    names per title line
+     2 - poolid  id of pool
+     3 - tstamp  timestamp HH:MM:SS
+     4 - sc      running seconds
+     5 - wn      number of writes
+     6 - wns     writes / second
+     7 - wmb     write MB/S
+     8 - wavg    write avg
+     9 - wd      write delay
+    10 - wo      write open
+    11 - w       write
+    12 - wso     write sync-obj
+    13 - wsd     write sync-dir
+    14 - wc      write close
+    15 - rn      number of reads
+    16 - rns     reads / second
+    17 - rmb     read MB/S
+    18 - ravg    read avg
+    19 - ro      read open
+    20 - ttfb    ttfb
+    21 - rc      read close
+    22 - dn      number of deletes
+    23 - dns     deletes / second
+    24 - davg    delete avg
+    25 - dd      delete delay
+    26 - fc      fileCount
+    27 - hf      HighestFile
+
+Fields can be selected and manipulated by standard Unix
+tools. (Note that miller: mlr could also be used for a
+great number of things).
+
+    cut -d, -f1-3,5 csv
+    awk -F, '$4 >= 60 && $4 <= 90' <csv
+
+Get the time limits of the file.
+
+    start=$(head -1 csv | cut -d, -f4)
+    last=$(tail -1 csv | cut -d, -f4)
+

@@ -1,0 +1,28 @@
+# zload
+#
+# We export all pools, remove current zfs and spl modules,
+# load the new build, looking at the version information from
+# dmesg
+#
+# We use a recent installed version of the cli tools (not installed
+# on each build). "sudo make install" will install the latest
+# cli tools. Note that the version information in zfs_config.h has
+# been altered to avoid ever leaking internal builds.
+#
+cd /home/fred/openzfs/module
+sudo zpool export -a
+sudo rmmod zfs
+sudo rmmod spl
+sudo insmod ./spl.ko
+sudo insmod ./zfs.ko
+v=`dmesg | tail -1`
+echo $v
+zfs version
+#
+# Use zdbg to set up bigger zdbmsg log. We keep roughly 20 megabytes
+# of log.
+#
+zdbg enable
+zdbg maxsize 20000000
+echo "dbgmsg status"
+zdbg status

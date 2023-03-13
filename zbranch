@@ -1,0 +1,35 @@
+# branch
+#
+# select branch
+# -- json
+# -- prefetch
+
+cd /home/fred
+
+case $1 in
+json)
+  rm openzfs
+  ln -s json openzfs
+  ;;
+prefetch)
+  rm openzfs
+  ln -s prefetch openzfs
+  ;;
+ref)
+  rm openzfs
+  ln -s ref openzfs
+  ;;
+pwb)
+  b=`ls -l openzfs | sed -e 's/^.* -> //'`
+  echo $b
+  ;;
+*)
+  echo "$0 json | prefetch | ref | pwb"
+  echo
+  echo "Select branch I am working on now. pwb is \"print working branch\""
+  echo "  json     - json branch (wasabi)"
+  echo "  prefetch - zpool load (ibm)"
+  echo "  ref      - reference (klara)"
+  echo "  pwb      - print working branch"
+  ;;
+esac

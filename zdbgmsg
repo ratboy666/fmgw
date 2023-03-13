@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# zdbgmsg
+#
+# ZFS has an internal zfs_dbgmsg(char *format, ...) API that essentially
+# replaces printk() for debug and logging purposes. This is controlled
+# by /sys and /proc entries on Linux. This script controls this feature.
+#
+# sudo should be "passwordless" to make this work.
+
+if [ -f /proc/spl/kstat/zfs/dbgmsg ]; then
+  :
+else
+  echo ZFS kernel module not loaded
+  exit 1
+fi
+
+case $1 in
+show)
+  sudo cat /proc/spl/kstat/zfs/dbgmsg
+  ;;
+clear)
+  echo 0 | sudo tee /proc/spl/kstat/zfs/dbgmsg >/dev/null
+  ;;
+enable)
+  echo 1 | sudo tee /sys/module/zfs/parameters/zfs_dbgmsg_enable >/dev/null
+  ;;
+disable)
+  echo 0 | sudo tee /sys/module/zfs/parameters/zfs_dbgmsg_enable >/dev/null
+  ;;
+maxsize)
+  # default size is 4194304
+  echo $2 | sudo tee /sys/module/zfs/parameters/zfs_dbgmsg_maxsize >/dev/null
+  ;;
+status)
+  echo -n "enabled: "
+  cat /sys/module/zfs/parameters/zfs_dbgmsg_enable
+  echo -n "maxsize: "
+  cat /sys/module/zfs/parameters/zfs_dbgmsg_maxsize
+  ;;
+help)
+  n=`basename $0`
+  echo $n "show | clear | enable | disable | status | maxsize <n> | help"
+  echo
+  echo "    show          show zdb_dbgmsg log"
+  echo "    clear         clear zdb_dbgmsg log"
+  echo "    enable        enable zdb_dbgmsg"
+  echo "    disable       disable zdb_dbgmsg"
+  echo "    status        enabled/disabled and maxsize"
+  echo "    maxsize <n>   set maximum size to n (default 4194304)"
+  echo "    help          this help"
+  ;;
+*)
+  n=`basename $0`
+  echo $n "show | clear | enable | disable | status | maxsize <n> | help"
+  ;;
+esac

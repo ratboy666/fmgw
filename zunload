@@ -1,0 +1,11 @@
+# Remove zfs -- especially Fedora 2.1.9
+
+sudo rmmod zfs
+sudo rmmod zunicode
+sudo rmmod zzstd
+sudo rmmod zlua
+sudo rmmod zavl
+sudo rmmod icp
+sudo rmmod zcommon
+sudo rmmod znvpair
+sudo rmmod spl
