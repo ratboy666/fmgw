@@ -1,0 +1,83 @@
+# work-on
+#
+# My environment is a bit complex laptop (llana), storage (carthoris)
+# and build (sasoom). This script is run on llana, and does necessary
+# mounting and sharing for virtualbox
+#
+# See work-off for tearing this down. both /mnt5 (on carthoris) and
+# /mnt1 (on sasoom) are dedicated to klara. As is 1TB SSD on sasoom,
+# which is dedicated to ZFS testing. This is done via USB 3 passthough
+# on sasoom and is passed to carter:
+#
+#   sudo mount /dev/disk/by-uuid/4756cffe-e4d5-4b0d-9d94-1b3567d12eb3 /mnt
+#   for i in `seq 0 7`; do
+#     sudo losetup /dev/loop$i /mnt/p$i
+#   done
+#
+# Now, this mounts the SSD, and creates 8 loopback devices (or leave
+# as files) which are then mounted as ZFS pool on carter. Note that the
+# underlying storage on the SSD is formated as ext4 (disable the journal).
+#
+# set up work environment:
+#
+#   llana: this laptop - command and control
+#
+#   sasoom: build machine
+#     /mnt1 - scratch 4TB volume (ntfs)
+#     /home/fred/mnt -> carthoris:/ (sshfs share)
+#
+#   carthoris: shared machine
+#     /mnt5 (4TB btrfs)
+#      GIT
+#      iso
+#      Klara
+#      VirtualBox VMs
+#
+#   carter: virtual machine -- back level for building/testing ZFS
+#      /home/fred/mnt -> carthrois:/ (sshfs share)
+#
+# No password ssh
+#
+#   ssh-keygen -t rsa
+#   ssh-copy-id fred@carthoris
+#
+# Validate 1000Mbit ethernet connection
+#
+#   iperf -s (on carthoris)
+#   iperf -c carthoris (on llana or sasoom)
+#
+# mount june1 to /mnt5 on carthoris
+# btrfs wd_black p10 (4TB)
+#
+echo mounting /mnt5 on carthoris
+ssh carthoris sudo mount /mnt5
+#
+# mount 0E35C9EE37FD40D3 to /mnt1 ons sasoom
+# ntfs wd bookshelf (4TB)
+#
+echo mount /mnt1 on sasoom
+ssh sasoom sudo mount /mnt1
+#
+# mount carthoris to sasoom with sshfs share. allows
+# virtualbox to see the disk images it needs.
+#
+echo mount share carthoris:/ on sasoom /home/fred/mnt
+ssh sasoom sshfs carthoris:/ /home/fred/mnt
+#
+# launch carter
+# wait for carter to be available
+#
+echo launching carter on sasoom
+ssh sasoom VBoxHeadless --startvm "Fedora\ 37" &
+# takes around a minute
+echo waiting for carter
+until ping -q -W 1 -c 1 carter >/dev/null; do
+  sleep 1
+done
+echo carter is up
+#
+# carter gets to mount carthoris share
+#
+echo mount share carthoris:/ on carter /home/fred/mnt
+ssh carter sshfs carthoris:/ /home/fred/mnt
+#

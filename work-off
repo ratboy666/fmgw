@@ -1,0 +1,19 @@
+# work-off
+#
+# shut down work environment
+#
+# carter may be down, don't wait
+echo unmount carthoris share to carter
+ping -q -c 1 -W 1 carter >/dev/null && ssh carter umount /home/fred/mnt 2>/dev/null
+#
+echo shut down carter
+ssh sasoom VBoxManage controlvm "Fedora\ 37" shutdown 2>/dev/null
+echo unmount carthoris share to sasoom
+ssh sasoom sudo umount /home/fred/mnt 2>/dev/null
+echo unmount sasoom /mnt1
+ssh sasoom sudo umount /mnt1 2>/dev/null
+echo unmount carthoris /mnt5
+ssh carthoris sudo umount /mnt5 2>/dev/null
+#
+
+
